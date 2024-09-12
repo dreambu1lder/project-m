@@ -40,7 +40,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     }
 
     @Override
-    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+    public void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         String payload = message.getPayload();
         ChatMessageDto chatMessage = objectMapper.readValue(payload, ChatMessageDto.class);
         String chatRoomId = getChatRoomIdFromSession(session);

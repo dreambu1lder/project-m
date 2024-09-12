@@ -21,34 +21,14 @@ import java.util.Set;
 @Slf4j
 public class KafkaConsumerService {
 
+    WebSocketSessionManager webSocketSessionManager;
     ObjectMapper objectMapper;
-    RedisWebSocketSessionStore redisWebSocketSessionStore;
 
     @KafkaListener(topics = "processed-messages", groupId = "websocket-group")
-    public void listen(String messagePayload) {
+    public void listenChatMessages(String messagePayload) {
         try {
             ChatMessageDto chatMessage = objectMapper.readValue(messagePayload, ChatMessageDto.class);
-            String chatRoomId = chatMessage.getChatRoomId();
-
-            Set<String> sessionIds = redisWebSocketSessionStore.getLocalSessionIdsByRoomId(chatRoomId);
-            boolean sessionExistsLocally = sessionIds != null && !sessionIds.isEmpty();
-
-            if (sessionExistsLocally) {
-                for (String sessionId : sessionIds) {
-                    WebSocketSession session = redisWebSocketSessionStore.getSession(sessionId);
-                    if (session != null && session.isOpen()) {
-                        session.sendMessage(new TextMessage(objectMapper.writeValueAsString(chatMessage)));
-                    }
-                }
-            } else {
-                sessionIds = redisWebSocketSessionStore.getSessionIdsByRoomId(chatRoomId);
-                for (String sessionId : sessionIds) {
-                    WebSocketSession session = redisWebSocketSessionStore.getSession(sessionId);
-                    if (session != null && session.isOpen()) {
-                        session.sendMessage(new TextMessage(objectMapper.writeValueAsString(chatMessage)));
-                    }
-                }
-            }
+            webSocketSessionManager.sendMessageToSession(chatMessage);
         } catch (Exception e) {
             log.error("Error processing message: {}", e.getMessage());
         }

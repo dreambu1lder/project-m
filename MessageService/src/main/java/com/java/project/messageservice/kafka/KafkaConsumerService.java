@@ -27,6 +27,7 @@ public class KafkaConsumerService {
             ChatMessageDto chatMessage = objectMapper.readValue(messagePayload, ChatMessageDto.class);
             messageService.saveMessage(chatMessage);
             kafkaProducerService.sendMessage(chatMessage, "processed-messages");
+            kafkaProducerService.sendMessage(chatMessage, "chat-notifications");
         } catch (Exception e) {
             log.error("Error processing message: {}", e.getMessage());
         }
